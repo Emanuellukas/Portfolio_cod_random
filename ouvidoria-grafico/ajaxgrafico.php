@@ -1,5 +1,5 @@
 <?php
-
+//Desenvolvido por @Emanuellukas com auxi√≠lio de programadores da empresa
 require("libs/db_stdlib.php");
 require("libs/db_conecta.php");
 include("libs/db_sql.php");
@@ -13,35 +13,31 @@ $dtini = $_POST['dtIni'];
 $dtfim = $_POST['dtFim'];
 $complexcod = $_POST['complexcod'];
 
+function exibirErro(){
+    if (empty($und)) {
+        $msgErro = 'Nenhum atendimento encontrado para as datas selecionadas.';
+    }
+}
 
 $dtIni = implode('-', array_reverse(explode('/', $dtini)));
 $dtFim = implode('-', array_reverse(explode('/', $dtfim)));
 
-if (!empty($dtIni) && !empty($dtFim)) {//CondiÁ„o para pesquisa usando data
-    $wheredt = "and ov01_dataatend between '$dtIni' and '$dtFim'";
+if (!empty($dtIni) && !empty($dtFim)) {//Condi√ß√£o para pesquisa usando data
+    $wheredt = "and *sigilo* between '$dtIni' and '$dtFim'";
 }
 
-if (!empty($complexcod)) {//CondiÁ„o para pesquisa usando
-    $wherecomp = "and ov01_prioridade = $complexcod";
+if (!empty($complexcod)) {//Condi√ß√£o para pesquisa usando
+    $wherecomp = "and *sigilo* = $complexcod";
 }
-//Innerjoins padrıes para o funcionamento da pesquisa correta
-$inner = " inner join tipoproc on tipoproc.p51_codigo = ouvidoriaatendimento.ov01_tipoprocesso 
-                    inner join tipoidentificacao on tipoidentificacao.ov05_sequencial = ouvidoriaatendimento.ov01_tipoidentificacao 
-                    inner join formareclamacao on formareclamacao.p42_sequencial = ouvidoriaatendimento.ov01_formareclamacao 
-                    inner join tipoprocgrupo on tipoprocgrupo.p40_sequencial = tipoproc.p51_tipoprocgrupo 
-                    inner join situacaoouvidoriaatendimento on situacaoouvidoriaatendimento.ov18_sequencial = ouvidoriaatendimento.ov01_situacaoouvidoriaatendimento 
-                    left join processoouvidoria on processoouvidoria.ov09_ouvidoriaatendimento = ouvidoriaatendimento.ov01_sequencial 
-                    left join protprocesso on protprocesso.p58_codproc = processoouvidoria.ov09_protprocesso 
-                    left join processoouvidoriaprorrogacao on processoouvidoriaprorrogacao.ov15_protprocesso = protprocesso.p58_codproc 
-                    left join ouvidoriaatendimentocidadao on ouvidoriaatendimento.ov01_sequencial = ouvidoriaatendimentocidadao.ov10_ouvidoriaatendimento 
-                    left join ouvidoriaatendimentocgm on ouvidoriaatendimentocgm.ov11_ouvidoriaatendimento = ouvidoriaatendimento.ov01_sequencial";
+//Innerjoins padr√µes para o funcionamento da pesquisa correta
+$inner = " *PARTE SIGILOSA DO CODIGO*";
 
-if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
-    switch ($escolha) {//Switch para identificar o radio button marcado no formul·rio
+if ($method == 'carregaDadosGraf') {//Verifica o m√©todo
+    switch ($escolha) {//Switch para identificar o radio button marcado no formul√°rio
         case 'tipoproc'://Caso seja Tipo de Processo            
-            $sql = "SELECT p51_descr, Count(*) FROM ouvidoriaatendimento
+            $sql = "SELECT p51_descr, Count(*) FROM *sigilo*
                    $inner 
-                    where ov01_instit = 1 and ov01_depart = 3 and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null $wheredt $wherecomp 
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null $wheredt $wherecomp 
                     GROUP BY p51_descr
                     HAVING Count(*) > 0";
             //var_dump($sql);exit;
@@ -52,25 +48,23 @@ if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
             $data = array();
             $msgErro = "";
 
-            if (empty($und)) {//Tratamento de erro caso nada seja retornado na vari·vel $und
-                $msgErro = 'Nenhum atendimento encontrado para as datas selecionadas.';
-            }
+            exibirErro()
 
-            foreach ($und as $i) {//IteraÁ„o dos dados buscados pela query e dentro de um array (Label e Data)
+            foreach ($und as $i) {//Itera√ß√£o dos dados buscados pela query e dentro de um array (Label e Data)
                 array_push($labels, $i['p51_descr']);
                 array_push($data, $i['count']);
             }
 
-            //valores atribuÌdos ao Json (responseText) enviado para ouv1_grafico.php
+            //valores atribu√≠dos ao Json (responseText) enviado para ouv1_grafico.php
             $retorno = array('label' => $labels, 'data' => $data, 'msgerro' => $msgErro);
             echo json_encode($retorno);
             break;
 
-        //Caso seja Forma de reclamÁ„o   
+        //Caso seja Forma de reclam√ß√£o   
         case 'formrec':
-            $sql = "SELECT ov01_formareclamacao, Count(*) FROM ouvidoriaatendimento
+            $sql = "SELECT ov01_formareclamacao, Count(*) FROM *sigilo*
                     $inner
-                    where ov01_instit = 1 and ov01_depart = 3 and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null $wheredt $wherecomp 
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null $wheredt $wherecomp 
                     GROUP BY ov01_formareclamacao
                     HAVING Count(*) > 0";
 
@@ -81,14 +75,12 @@ if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
             $data = array();
             $msgErro = "";
 
-            if (empty($und)) {
-                $msgErro = 'Nenhum atendimento encontrado para as datas selecionadas.';
-            }
+            exibirErro();
 
             foreach ($und as $i) {
                 array_push($data, $i['count']);
 
-                //Switch para alterar o que vem em n˙mero do banco para String, facilita identificaÁ„o
+                //Switch para alterar o que vem em n√∫mero do banco para String, facilita identifica√ß√£o
                 switch ($i['ov01_formareclamacao']) {
                     case '1':
                         array_push($labels, "Pessoalmente");
@@ -102,20 +94,18 @@ if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
                     case '4':
                         array_push($labels, "Carta");
                         break;
-                    default : "Forma n„o identificada";
+                    default : "Forma n√£o identificada";
                 }
             }
-
-
 
             $retorno = array('label' => $labels, 'data' => $data, 'msgerro' => $msgErro);
             echo json_encode($retorno);
             break;
 
-        case 'situ'://Caso seja pela situaÁ„o
-            $sql = "SELECT situacaoouvidoriaatendimento.ov18_descricao, Count(*) FROM ouvidoriaatendimento
+        case 'situ'://Caso seja pela situa√ß√£o
+            $sql = "SELECT situacaoouvidoriaatendimento.ov18_descricao, Count(*) FROM *sigilo*
                     $inner
-                    where ov01_instit = 1 and ov01_depart = 3 and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null  
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null  
                     GROUP BY ov18_descricao
                     HAVING Count(*) > 0";
 
@@ -127,9 +117,7 @@ if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
             $data = array();
             $msgErro = "";
 
-            if (empty($und)) {
-                $msgErro = 'Nenhum atendimento encontrado para as datas selecionadas.';
-            }
+            exibirErro()
 
             foreach ($und as $i) {
                 array_push($labels, $i['ov18_descricao']);
@@ -140,10 +128,10 @@ if ($method == 'carregaDadosGraf') {//Verifica o mÈtodo
             echo json_encode($retorno);
             break;
         default :
-            $msgErro = 'Gr·fico n„o processado.';
+            $msgErro = 'Gr√°fico n√£o processado.';
     }//Fim Switch    
 } else {//Erro / Fim carregadados
-    $msgErro = 'MÈdotodo carregar dados n„o est· funcionando.';
+    $msgErro = 'M√©dotodo carregar dados n√£o est√° funcionando.';
 }
 
 
