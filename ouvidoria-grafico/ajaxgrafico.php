@@ -1,5 +1,5 @@
 <?php
-
+//Desenvolvido por @Emanuellukas com auxiÃ­lio de programadores da empresa
 require("libs/db_stdlib.php");
 require("libs/db_conecta.php");
 include("libs/db_sql.php");
@@ -11,17 +11,28 @@ $method = $_POST['method'];
 $escolha = $_POST['tpTotalizadores'];
 $dtini = $_POST['dtIni'];
 $dtfim = $_POST['dtFim'];
+<<<<<<< HEAD
 $complexcod = $_POST['complex'];
 $complexdescr = $_POST['complexdescr'];
+=======
+$complexcod = $_POST['complexcod'];
+
+function exibirErro(){
+    if (empty($und)) {
+        $msgErro = 'Nenhum atendimento encontrado para as datas selecionadas.';
+    }
+}
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
 
 //var_dump($_SESSION);exit;
 $dtIni = implode('-', array_reverse(explode('/', $dtini)));
 $dtFim = implode('-', array_reverse(explode('/', $dtfim)));
 
-if (!empty($dtIni) && !empty($dtFim)) {//Condição para pesquisa usando data
-    $wheredt = "and ov01_dataatend between '$dtIni' and '$dtFim'";
+if (!empty($dtIni) && !empty($dtFim)) {//CondiÃ§Ã£o para pesquisa usando data
+    $wheredt = "and *sigilo* between '$dtIni' and '$dtFim'";
 }
 
+<<<<<<< HEAD
 if (!empty($complexcod)) {//Condição para pesquisa usando complexibilidade
     $wherecomp = "and ov01_prioridade = $complexcod";
 }
@@ -39,10 +50,24 @@ $inner = " inner join tipoproc on tipoproc.p51_codigo = ouvidoriaatendimento.ov0
 
 if ($method == 'carregaDadosGraf') {//Verifica o método
     switch ($escolha) {//Switch para identificar o radio button marcado no formulário
+=======
+if (!empty($complexcod)) {//CondiÃ§Ã£o para pesquisa usando
+    $wherecomp = "and *sigilo* = $complexcod";
+}
+//Innerjoins padrÃµes para o funcionamento da pesquisa correta
+$inner = " *PARTE SIGILOSA DO CODIGO*";
+
+if ($method == 'carregaDadosGraf') {//Verifica o mÃ©todo
+    switch ($escolha) {//Switch para identificar o radio button marcado no formulÃ¡rio
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
         case 'tipoproc'://Caso seja Tipo de Processo            
-            $sql = "SELECT p51_descr, Count(*) FROM ouvidoriaatendimento
+            $sql = "SELECT p51_descr, Count(*) FROM *sigilo*
                    $inner 
+<<<<<<< HEAD
                     where ov01_instit = 1 and ov01_depart = {$_SESSION['DB_coddepto']} and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null $wheredt $wherecomp 
+=======
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null $wheredt $wherecomp 
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
                     GROUP BY p51_descr
                     HAVING Count(*) > 0";
             //var_dump($sql);exit;
@@ -55,6 +80,7 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
             $dataPercent = array();
             $msgErro = "";
 
+<<<<<<< HEAD
             if (empty($und)) {//Tratamento de erro caso nada seja retornado na variável $und
                 $msgErro = 'Nenhum atendimento encontrado. Verificar as datas e/ou departamento.';
             }
@@ -84,6 +110,25 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
             $sql = "SELECT ov01_formareclamacao, Count(*) FROM ouvidoriaatendimento
                     $inner
                     where ov01_instit = 1 and ov01_depart = {$_SESSION['DB_coddepto']} and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null $wheredt $wherecomp 
+=======
+            exibirErro()
+
+            foreach ($und as $i) {//IteraÃ§Ã£o dos dados buscados pela query e dentro de um array (Label e Data)
+                array_push($labels, $i['p51_descr']);
+                array_push($data, $i['count']);
+            }
+
+            //valores atribuÃ­dos ao Json (responseText) enviado para ouv1_grafico.php
+            $retorno = array('label' => $labels, 'data' => $data, 'msgerro' => $msgErro);
+            echo json_encode($retorno);
+            break;
+
+        //Caso seja Forma de reclamÃ§Ã£o   
+        case 'formrec':
+            $sql = "SELECT ov01_formareclamacao, Count(*) FROM *sigilo*
+                    $inner
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null $wheredt $wherecomp 
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
                     GROUP BY ov01_formareclamacao
                     HAVING Count(*) > 0";
 
@@ -95,14 +140,19 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
             $labelper = array();
             $msgErro = "";
 
+<<<<<<< HEAD
             if (empty($und)) {
                 $msgErro = 'Nenhum atendimento encontrado. Verificar as datas e/ou departamento.';
             }
             
+=======
+            exibirErro();
+
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
             foreach ($und as $i) {
                 array_push($data, $i['count']);
 
-                //Switch para alterar o que vem em número do banco para String, facilita identificação
+                //Switch para alterar o que vem em nÃºmero do banco para String, facilita identificaÃ§Ã£o
                 switch ($i['ov01_formareclamacao']) {
                     case '1':
                         array_push($labels, "Pessoalmente");
@@ -116,7 +166,11 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
                     case '4':
                         array_push($labels, "Carta");
                         break;
+<<<<<<< HEAD
                     default : "Forma de reclamação não identificada";
+=======
+                    default : "Forma nÃ£o identificada";
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
                 }
             }
             
@@ -131,14 +185,22 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
                 array_push($labelper, $labels[$I].' - '.number_format($percentVal, 2).'%');//formatação do valor na inserção do mesmo em um array
             }
 
+<<<<<<< HEAD
             $retorno = array('label' => $labelper, 'data' => $data, 'msgerro' => $msgErro, 'labelbar' => $labels);
+=======
+            $retorno = array('label' => $labels, 'data' => $data, 'msgerro' => $msgErro);
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
             echo json_encode($retorno);
             break;
 
-        case 'situ'://Caso seja pela situação
-            $sql = "SELECT situacaoouvidoriaatendimento.ov18_descricao, Count(*) FROM ouvidoriaatendimento
+        case 'situ'://Caso seja pela situaÃ§Ã£o
+            $sql = "SELECT situacaoouvidoriaatendimento.ov18_descricao, Count(*) FROM *sigilo*
                     $inner
+<<<<<<< HEAD
                     where ov01_instit = 1 and ov01_depart = {$_SESSION['DB_coddepto']} and ov01_situacaoouvidoriaatendimento = 1 and ov15_sequencial is null $wheredt $wherecomp 
+=======
+                    where ov01_instit = 1 and ov01_depart = 3 and *sigilo* = 1 and ov15_sequencial is null  
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
                     GROUP BY ov18_descricao
                     HAVING Count(*) > 0";
 
@@ -151,9 +213,13 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
             $labelper = array();
             $msgErro = "";
 
+<<<<<<< HEAD
             if (empty($und)) {
                 $msgErro = 'Nenhum atendimento encontrado. Verificar as datas e/ou departamento selecionado.';
             }
+=======
+            exibirErro()
+>>>>>>> 0c09a50f2fc06b45249b07e294c66b0e831cbd2d
 
             foreach ($und as $i) {
                 array_push($labels, $i['ov18_descricao']);
@@ -214,10 +280,10 @@ if ($method == 'carregaDadosGraf') {//Verifica o método
             echo json_encode($retorno);
             break;
         default :
-            $msgErro = 'Gráfico não processado.';
+            $msgErro = 'GrÃ¡fico nÃ£o processado.';
     }//Fim Switch    
 } else {//Erro / Fim carregadados
-    $msgErro = 'Médotodo carregar dados não está funcionando.';
+    $msgErro = 'MÃ©dotodo carregar dados nÃ£o estÃ¡ funcionando.';
 }
 
 
