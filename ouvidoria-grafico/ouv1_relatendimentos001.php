@@ -41,6 +41,7 @@ require_once("classes/db_ouvidor_classe.php");
 require_once("classes/db_db_depart_classe.php");
 require_once ("classes/db_gprioridade_classe.php");
 
+session_start();
 
 $clouvidor = new cl_ouvidor();
 $cldepartamento = new cl_db_depart();
@@ -64,6 +65,33 @@ if ($clouvidor->numrows > 0) {
 
     $rsDepartamentos = $cldepartamento->sql_record($cldepartamento->sql_query(null, "coddepto,descrdepto", "descrdepto", $sWhere));
 }
+
+
+$sqlComplex = "select ov30_codigo, ov30_descr from gprioridade";
+$result = pg_query($sqlComplex);
+$aComplex = pg_fetch_all($result);
+
+
+$oDaoComplexidade = db_utils::getDao('gprioridade');
+$sSqlComplexidade = $oDaoComplexidade->sql_query_file(null, "*", null);
+$rsComplexidade = $oDaoComplexidade->sql_record($sSqlComplexidade);
+
+
+if ($oDaoComplexidade->numrows > 0){
+    
+    //monta o array para o select
+    $aComplexidade = array();
+    //qualquer tipo de Situação, sem filtros na pesquisa
+    $aComplexidade[0] = "Todos";
+    for ($i = 0; $i < $oDaoComplexidade->numrows; $i++) {
+//print_r($rsComplexidade);exit;
+        $oDaoComplex = db_utils::fieldsMemory($rsComplexidade, $i);
+        $aComplexidade[$oDaoComplex->ov30_codigo] = urldecode($oDaoComplex->ov30_descr);
+       // print_r($oDaoComplexidade);exit;
+    }
+}
+
+
 
 $oDaoSituacaoAtendimento = db_utils::getDao('situacaoouvidoriaatendimento');
 $sSqlSituacaoAtendimento = $oDaoSituacaoAtendimento->sql_query_file(null, "*", null);
@@ -91,6 +119,7 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
         db_app::load('strings.js,scripts.js,datagrid.widget.js,prototype.js,jquery-2.1.1.min.js,Chart.bundle.js');
         db_app::load('estilos.css,grid.style.css');
         ?>
+        <script type="text/javascript" src="Chart.bundle.min.js"></script>
         <script type="text/javascript">
 
             function js_ImprimeProcesso() {
@@ -101,7 +130,7 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                 var strDataFim = $('#dt_fim').val();
                 var ouvidoria = $('#ouvidoria').val();
                 var situacaoAtendimento = $('#situacaoatendimento').val();
-                var complexidade = $('#ov30_codigo').val(); //FOI ACRESCENTADO PARA APARECER NO RELATÓRIO
+                var complexidade = $('#gprioridade').val(); //FOI ACRESCENTADO PARA APARECER NO RELATÓRIO
 
 
                 if ($('tipoProcesso').checked == true) {
@@ -142,13 +171,13 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                 var tp_totalizadores = $('input:radio[name=escolha_gr]:checked').val();
                 var strDataInicial = $('input[name="dt_ini"]').val();
                 var strDataFim = $('input[name="dt_fim"]').val();
-                var complexcod = $('input[name="ov30_codigo"]').val();
-                
+                var complex = $('#complex option:selected').val();
+
                 //Parâmetros
                 var sParametros = 'tpTotalizadores=' + tp_totalizadores;
                     sParametros += '&dtIni=' + strDataInicial;
                     sParametros += '&dtFim=' + strDataFim;
-                    sParametros += '&complexcod=' + complexcod;
+                    sParametros += '&complex=' + complex;
                 var sNomeLookup = 'ouv1_grafico.php';
 
 
@@ -157,9 +186,12 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                         'db_iframe_grafico',
                         sNomeLookup + '?' + sParametros,
                         'Gráfico',
-                        true
+                        true,20,
                         );
+                //window.setTimeout('js_imprimirGraf()', 1000);
+
             }
+
 
         </script>
     </head>
@@ -235,19 +267,14 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                                         </tr>
 
                                         <!--FOI ACRESCENTADO ESTE NOVO CAMPO-->  
-                                        <tr>
-                                            <td nowrap>
+                                        <tr class="rela">
+                                            <td align="left"><b>Complexidade:</b></td>
+                                            <td align="left">
                                                 <?
-                                                db_ancora('<b>Complexidade:</b>', 'js_pesquisaComplexidade(true);', $db_opcao, '');
+                                                db_select('gprioridade', $aComplexidade, true, 1);
                                                 ?>
                                             </td>
-                                            <td nowrap>
-                                                <?
-                                                db_input('ov30_codigo', 10, $Iov30_codigo, true, 'text', 1, "onChange='js_pesquisaComplexidade(false);'");
-                                                db_input('ov30_descr', 30, $Iov30_descr, true, 'text', 3, '');
-                                                ?>
-                                            </td>
-                                        </tr> 
+                                        </tr>  
 
                                         <tr>
                                             <td colspan="2">
@@ -277,9 +304,22 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                                                                 <input type="checkbox" id="ouvidor_rel" name="ouvidor">&nbsp;<b>Ouvidor</b>
                                                             </td>
                                                         </tr>
-                                                    </table>
+                                                    </table> 
+                                                   
 
                                                     <table class="graf" style="display:none;">
+                                                        <tr class="graf">
+                                                            <td align="left"><b>Complexidade:</b></td>
+                                                            <td align="left">
+                                                                <select id="complex" name="complex">
+                                                                <option value="">Selecione uma opção...</option>
+                                                                <?
+                                                                foreach ($aComplex as $i => $value){
+                                                                    ?><option  value="<? echo $value['ov30_codigo']; ?>"><? echo $value['ov30_descr']?></option>
+                                                               <? } ?>
+                                                                </select>
+                                                            </td>
+                                                        </tr>
                                                         <tr>
                                                             <td width="60">&nbsp;</td>
                                                             <td>
@@ -298,6 +338,7 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                                                                 <label><input type="radio" id="situacao_gr" name="escolha_gr" value="situ">&nbsp;<b>Situação</b></label>
                                                             </td>
                                                         </tr>
+                                                       
                                                         
                                                     </table>
                                                 </fieldset>
@@ -312,7 +353,7 @@ if ($oDaoSituacaoAtendimento->numrows > 0) {
                             <td>
                                 <input type="hidden" name="deptoAtual" id="deptoAtual" value="<?= db_getsession('DB_coddepto') ?>"> 
                                 <input class="rela" name="imprimir" type="button" id="imprimir" value="Imprimir" onclick="js_ImprimeProcesso();">
-                                <input class="graf" name="gerargrafico" type="button" id="gerargrafico" value="Gerar Gráfico" style="display: none;" onclick="js_GerarGrafico();">
+                                <input class="graf" name="gerargrafico" type="button" id="gerargrafico" value="Gerar Gráfico" style="display: none;" onclick="js_GerarGrafico()">
                             </td>
                         </tr>
 
@@ -329,6 +370,35 @@ db_menu(db_getsession("DB_id_usuario"), db_getsession("DB_modulo"), db_getsessio
 </html>
 
 <script>
+<<<<<<< HEAD
+//    function js_pesquisaComplexidade(lMostra) {
+//
+//        if (lMostra) {
+//            js_OpenJanelaIframe('top.corpo', 'db_iframe_gprioridade', 'func_gprioridade.php?funcao_js=parent.js_mostraComplexidade1|ov30_codigo|ov30_descr', 'Pesquisa', true);
+//        } else {
+//            if ($F('ov30_codigo') != '') {
+//                js_OpenJanelaIframe('top.corpo', 'db_iframe_gprioridade', 'func_gprioridade.php?pesquisa_chave=' + $F('ov30_codigo') + '&funcao_js=parent.js_mostraComplexidade', 'Pesquisa', false);
+//            } else {
+//                document.form1.ov30_descr.value = '';
+//            }
+//        }
+//    }
+//
+//    function js_mostraComplexidade(chave, lErro) {
+//        document.form1.ov30_descr.value = chave;
+//        if (lErro) {
+//            document.form1.ov30_codigo.focus();
+//            document.form1.ov30_codigo.value = '';
+//            return false;
+//        }
+//    }
+//
+//    function js_mostraComplexidade1(chave1, chave2) {
+//        document.form1.ov30_codigo.value = chave1;
+//        document.form1.ov30_descr.value = chave2;
+//        db_iframe_gprioridade.hide();
+//    }
+=======
     function js_pesquisaComplexidade(lMostra) {
 
         if (lMostra) {
@@ -356,6 +426,8 @@ db_menu(db_getsession("DB_id_usuario"), db_getsession("DB_modulo"), db_getsessio
         document.form1.ov30_descr.value = chave2;
         db_iframe_gprioridade.hide();
     }
+    
+>>>>>>> 80725e8ba4fe84b5a0b9a16a7237a00401ddcb0c
 
 </script>
 <script>
